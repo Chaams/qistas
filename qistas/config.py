@@ -47,6 +47,7 @@ class GateConfig(_Strict):
     thresholds: dict[str, float] = {}
     tag_thresholds: dict[str, dict[str, float]] = {}
     tolerance: float = 0.02
+    latency_tolerance: float = 0.25
     max_failures: int = 0
 
 
