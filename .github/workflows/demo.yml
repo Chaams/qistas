@@ -1,7 +1,8 @@
 name: demo
 # Real evaluation of the example bot on every PR that touches it, on the Gemini API FREE tier:
 #   secret   GEMINI_API_KEY  (Google AI Studio key, no credit card)
-#   variable GEMINI_MODEL    (model id shown in Google AI Studio, free tier)
+#   variable GEMINI_MODEL    (judge model id from Google AI Studio, free tier)
+#   variable DEMO_MODEL      (optional: bot model, to split the free quota)
 on:
   pull_request:
     paths:
@@ -18,7 +19,8 @@ jobs:
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
       DEMO_PROVIDER: gemini
-      DEMO_MODEL: ${{ vars.GEMINI_MODEL }}
+      # The bot may use another model than the judge: free-tier quotas are counted per model.
+      DEMO_MODEL: ${{ vars.DEMO_MODEL || vars.GEMINI_MODEL }}
     steps:
       - name: Check configuration
         run: |
