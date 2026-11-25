@@ -1,0 +1,24 @@
+name: qistas
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write   # lets Qistas post its report as a PR comment
+
+jobs:
+  quality-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Test the bot built from THIS pull request: pass its preview URL,
+      # or start it in the job with `start-command` + `health-url`.
+      - uses: Chaams/qistas@v1
+        with:
+          config: qistas.yaml
+          # target-url: ${{ steps.preview.outputs.url }}
+          # start-command: docker compose up -d bot
+          # health-url: http://localhost:8000/health
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}

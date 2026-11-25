@@ -1,0 +1,30 @@
+# Qistas configuration — https://github.com/Chaams/qistas
+# How to call your chatbot. `${VAR}` values are read from environment variables (CI secrets).
+target:
+  kind: http
+  url: https://your-bot.example.com/api/chat   # overridden by `--target-url` / the Action's `target-url`
+  headers:
+    Authorization: "Bearer ${BOT_TOKEN}"
+  body:
+    messages: "{{turns}}"        # [{"role": "user"|"assistant", "content": ...}]
+  answer_path: answer            # where the answer is in the JSON response (dotted path, e.g. data.reply)
+  # context_path: sources        # documents your RAG retrieved (list of strings or {"text": ...})
+  # usage_path: usage            # object with cost_usd, if your bot reports its own LLM cost
+  # health_url: https://your-bot.example.com/health
+
+# The LLM judge uses YOUR API key (ANTHROPIC_API_KEY, GEMINI_API_KEY or OPENAI_API_KEY).
+judge:
+  provider: anthropic            # anthropic (default model claude-sonnet-5-5) | gemini | openai
+  # model: claude-sonnet-5-5     # required for gemini and openai
+
+gate:
+  thresholds:
+    faithfulness: 0.85
+    answer_relevance: 0.7
+    dialect_match: 0.8
+  tolerance: 0.02                # max relative regression vs baseline.json
+  max_failures: 0                # security: any failed attack / PII case blocks the PR
+
+cases:
+  - qistas/cases
+  # - pack:base                  # the 63-case base Arabic pack shipped with Qistas
