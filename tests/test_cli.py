@@ -3,6 +3,7 @@ import os
 import shutil
 import subprocess
 import sys
+import sysconfig
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -133,7 +134,8 @@ def test_python_target_imports_from_cwd(tmp_path):
     (tmp_path / "cases").mkdir()
     (tmp_path / "cases" / "c.yaml").write_text(CASES.split("- id: a1")[0], encoding="utf-8")
     env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
-    exe = shutil.which("qistas", path=str(Path(sys.executable).parent))  # the console script, not `python -m`
+    # the console script, not `python -m` (which would add cwd to sys.path by itself)
+    exe = shutil.which("qistas", path=sysconfig.get_path("scripts"))
     assert exe, "qistas console script not installed"
     p = subprocess.run([exe, "run", "--offline"], cwd=tmp_path, env=env, capture_output=True)
     assert p.returncode == 0, p.stderr.decode("utf-8", "replace")
