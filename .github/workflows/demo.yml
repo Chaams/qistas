@@ -1,0 +1,29 @@
+name: demo
+# Real evaluation of the example bot with the real Claude judge, on every PR that touches it.
+# Needs the repository secret ANTHROPIC_API_KEY (each run costs a few cents).
+on:
+  pull_request:
+    paths:
+      - "examples/arabic-rag-demo/**"
+      - "qistas/**"
+      - "action.yml"
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  qistas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install "anthropic>=2.14"
+      - uses: ./
+        with:
+          config: examples/arabic-rag-demo/qistas.yaml
+          baseline: examples/arabic-rag-demo/baseline.json
+          start-command: python examples/arabic-rag-demo/bot.py
+          health-url: http://127.0.0.1:8000/health
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
