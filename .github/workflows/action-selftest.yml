@@ -1,0 +1,31 @@
+name: action-selftest
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  selftest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # The user's own Python, set up before Qistas: the action must not replace it.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - id: qistas
+        uses: ./
+        continue-on-error: true
+        with:
+          config: tests/selftest/qistas.yaml
+          start-command: python -m tests.fixtures.http_echo_bot
+          health-url: http://127.0.0.1:8765/health
+          offline: "true"
+          comment: "false"
+      - name: The echo bot leaks HACKED, so the gate must fail
+        run: test "${{ steps.qistas.outputs.passed }}" = "false"
+      - name: results.json was produced and names the leaking case
+        run: grep -q selftest-echo-leak results.json
+      - name: The job's Python is still the user's 3.11
+        run: python --version | grep -q "3.11"

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qistas · {{ "PASS" if outcome.passed else "FAIL" }}</title>
+<style>
+  :root { color-scheme: light dark; --ok:#1f8a3a; --ko:#c23b2e; --line:#8884; }
+  body { font: 15px/1.5 system-ui, sans-serif; max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+  h1 span { color: {{ "var(--ok)" if outcome.passed else "var(--ko)" }}; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+  th, td { border-bottom: 1px solid var(--line); padding: .4rem .6rem; text-align: start; vertical-align: top; }
+  th { font-weight: 600; }
+  .ko { color: var(--ko); } .ok { color: var(--ok); } .muted { opacity: .7; font-size: .85em; }
+  .answer { white-space: pre-wrap; max-width: 40ch; }
+</style>
+</head>
+<body>
+<h1>Qistas · <span>{{ "PASS" if outcome.passed else "FAIL" }}</span></h1>
+<p class="muted">Qistas {{ result.meta.qistas_version }} · juge {{ result.meta.judge_model or "hors ligne" }} · commit {{ (result.meta.commit or "")[:7] }} · {{ result.cases|length }} cas · {{ result.meta.started_at }}</p>
+
+{% if outcome.problems %}<h2>Problèmes</h2><ul>{% for p in outcome.problems %}<li class="ko">{{ p }}</li>{% endfor %}</ul>{% endif %}
+{% if outcome.notes %}<h2>Notes</h2><ul>{% for n in outcome.notes %}<li>{{ n }}</li>{% endfor %}</ul>{% endif %}
+
+<h2>Agrégats</h2>
+<table><tr><th>Métrique</th><th>Valeur</th></tr>
+{% for name, value in result.aggregates.items() %}<tr><td>{{ name }}</td><td>{{ "%.3f"|format(value) }}</td></tr>{% endfor %}
+<tr><td>sécurité (échecs)</td><td>{{ result.security.failures }}</td></tr>
+<tr><td>latence p95 (ms)</td><td>{{ "%.0f"|format(result.latency_p95_ms) }}</td></tr>
+</table>
+
+<h2>Cas</h2>
+<table><tr><th>Cas</th><th>Type</th><th>Métriques</th><th>Réponse du bot</th></tr>
+{% for c in result.cases %}<tr>
+<td>{{ c.id }}</td><td>{{ c.type }}</td>
+<td>{% if c.error %}<span class="ko">erreur : {{ c.error }}</span>{% endif %}
+{% for m in c.metrics %}<div class="{{ 'ko' if m.error or m.passed is false else '' }}">{{ m.name }} :
+{% if m.error %}erreur — {{ m.error }}{% elif m.score is none %}—{% else %}{{ "%.2f"|format(m.score) }}{% endif %}
+<span class="muted" dir="auto">{{ m.reason }}</span></div>{% endfor %}</td>
+<td class="answer" dir="auto">{{ c.answer }}</td>
+</tr>{% endfor %}
+</table>
+</body>
+</html>
