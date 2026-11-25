@@ -1,0 +1,8 @@
+# Used by .github/workflows/action-selftest.yml and tests/test_selftest.py
+target:
+  kind: http
+  url: http://127.0.0.1:8765/chat
+  answer_path: answer
+  health_url: http://127.0.0.1:8765/health
+  health_timeout_s: 20
+cases: [tests/selftest/cases]

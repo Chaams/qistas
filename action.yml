@@ -1,0 +1,194 @@
+name: Qistas — Arabic LLM quality gate
+description: Evaluate an Arabic chatbot (dialect, faithfulness, hallucination, PII, prompt injection) and block the PR on regression.
+author: Mohamed Chamseddine Douici
+branding:
+  icon: shield
+  color: green
+
+inputs:
+  config:
+    description: Path to qistas.yaml
+    default: qistas.yaml
+  target-url:
+    description: URL of the bot built from this PR (preview deployment). Overrides target.url.
+    default: ""
+  start-command:
+    description: Command that starts the bot inside the job (run in the background).
+    default: ""
+  health-url:
+    description: URL polled until the bot answers (used with start-command or target-url).
+    default: ""
+  baseline:
+    description: Path to baseline.json
+    default: baseline.json
+  judge-provider:
+    description: Install extra for the judge (anthropic | gemini | openai). Defaults to the config's provider.
+    default: anthropic
+  offline:
+    description: "'true' = no LLM judge (rule-based and lexical checks only)."
+    default: "false"
+  version:
+    description: "Qistas version from PyPI. Empty = install from this action's own source."
+    default: ""
+  comment:
+    description: "'true' = post or update the report as a PR comment."
+    default: "true"
+  github-token:
+    description: Token used to comment on the PR.
+    default: ${{ github.token }}
+
+outputs:
+  passed:
+    description: "'true' if the gate passed, 'false' otherwise ('skipped' on fork PRs without secrets)."
+    value: ${{ steps.result.outputs.passed }}
+
+runs:
+  using: composite
+  steps:
+    - name: Check secrets (fork PRs)
+      id: skip
+      shell: bash
+      env:
+        IS_FORK: ${{ github.event.pull_request.head.repo.fork }}
+        OFFLINE: ${{ inputs.offline }}
+        PROVIDER: ${{ inputs.judge-provider }}
+      run: |
+        key=""
+        case "$PROVIDER" in
+          anthropic) key="${ANTHROPIC_API_KEY:-}" ;;
+          gemini) key="${GEMINI_API_KEY:-}" ;;
+          openai) key="${OPENAI_API_KEY:-}" ;;
+        esac
+        if [ "$IS_FORK" = "true" ] && [ "$OFFLINE" != "true" ] && [ -z "$key" ]; then
+          echo "Qistas skipped: secrets unavailable on fork PRs"
+          echo "skip=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - uses: actions/setup-python@v5
+      if: steps.skip.outputs.skip != 'true'
+      with:
+        python-version: "3.12"
+
+    - name: Install Qistas
+      if: steps.skip.outputs.skip != 'true'
+      shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+        PROVIDER: ${{ inputs.judge-provider }}
+        OFFLINE: ${{ inputs.offline }}
+        ACTION_PATH: ${{ github.action_path }}
+      run: |
+        extra="[$PROVIDER]"; [ "$OFFLINE" = "true" ] && extra=""
+        if [ -z "$VERSION" ]; then
+          python -m pip install --quiet "${ACTION_PATH}${extra}"
+        else
+          python -m pip install --quiet "qistas${extra}==${VERSION}"
+        fi
+        qistas --version
+
+    - name: Start the bot
+      if: steps.skip.outputs.skip != 'true' && inputs.start-command != ''
+      shell: bash
+      env:
+        START: ${{ inputs.start-command }}
+      run: |
+        nohup bash -c "$START" > qistas-bot.log 2>&1 &
+        echo $! > qistas-bot.pid
+        echo "bot started (pid $(cat qistas-bot.pid))"
+
+    - name: Wait for the bot
+      if: steps.skip.outputs.skip != 'true' && inputs.health-url != ''
+      shell: bash
+      env:
+        HEALTH: ${{ inputs.health-url }}
+      run: |
+        for i in $(seq 1 120); do
+          if curl -fsS -o /dev/null "$HEALTH"; then echo "bot healthy"; exit 0; fi
+          sleep 1
+        done
+        echo "::error::bot not healthy at $HEALTH after 120s"; cat qistas-bot.log 2>/dev/null || true; exit 3
+
+    - name: Evaluate
+      id: run
+      if: steps.skip.outputs.skip != 'true'
+      shell: bash
+      env:
+        CONFIG: ${{ inputs.config }}
+        TARGET_URL: ${{ inputs.target-url }}
+        START: ${{ inputs.start-command }}
+        OFFLINE: ${{ inputs.offline }}
+      run: |
+        args=(run -c "$CONFIG" -o results.json)
+        [ -n "$TARGET_URL" ] && args+=(--target-url "$TARGET_URL")
+        [ "$OFFLINE" = "true" ] && args+=(--offline)
+        if [ -z "$TARGET_URL" ] && [ -z "$START" ]; then
+          kind=$(python -c "from qistas.config import load_config; print(load_config('$CONFIG').target.kind)" 2>/dev/null || echo "")
+          if [ "$kind" = "http" ]; then
+            echo "QISTAS_NOTE=shared staging URL : PR code may not be what is tested" >> "$GITHUB_ENV"
+            echo "::warning::Qistas is calling a fixed URL: the code of this PR may not be what is tested."
+          fi
+        fi
+        qistas "${args[@]}"
+
+    - name: Gate
+      id: gate
+      if: steps.skip.outputs.skip != 'true' && steps.run.outcome == 'success'
+      shell: bash
+      env:
+        CONFIG: ${{ inputs.config }}
+        BASELINE: ${{ inputs.baseline }}
+      run: |
+        set +e
+        qistas gate results.json -c "$CONFIG" --baseline "$BASELINE" --report-md qistas-report.md --report-html report.html
+        echo "code=$?" >> "$GITHUB_OUTPUT"
+        cat qistas-report.md >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Upload results
+      if: always() && steps.skip.outputs.skip != 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: qistas-results
+        path: |
+          results.json
+          report.html
+        if-no-files-found: ignore
+
+    - name: Comment on the PR
+      if: always() && steps.skip.outputs.skip != 'true' && inputs.comment == 'true' && github.event_name == 'pull_request'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        PR: ${{ github.event.pull_request.number }}
+      run: |
+        [ -f qistas-report.md ] || exit 0
+        id=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate \
+             --jq '.[] | select(.body | startswith("<!-- qistas-report -->")) | .id' | head -n 1) || id=""
+        if [ -n "$id" ]; then
+          gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" -F body=@qistas-report.md > /dev/null \
+            || echo "::warning::could not update the PR comment (missing pull-requests: write?)"
+        else
+          gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" -F body=@qistas-report.md > /dev/null \
+            || echo "::warning::could not post the PR comment (missing pull-requests: write?)"
+        fi
+
+    - name: Stop the bot
+      if: always() && inputs.start-command != ''
+      shell: bash
+      run: |
+        [ -f qistas-bot.pid ] && kill "$(cat qistas-bot.pid)" 2>/dev/null || true
+
+    - name: Result
+      id: result
+      if: always()
+      shell: bash
+      env:
+        SKIP: ${{ steps.skip.outputs.skip }}
+        RUN: ${{ steps.run.outcome }}
+        CODE: ${{ steps.gate.outputs.code }}
+      run: |
+        if [ "$SKIP" = "true" ]; then echo "passed=skipped" >> "$GITHUB_OUTPUT"; exit 0; fi
+        if [ "$RUN" != "success" ]; then echo "passed=false" >> "$GITHUB_OUTPUT"; exit 2; fi
+        if [ "$CODE" = "0" ]; then echo "passed=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+        echo "passed=false" >> "$GITHUB_OUTPUT"; exit 1
