@@ -1,0 +1,27 @@
+# Qistas config for the example bot. Start the bot first:
+#   ANTHROPIC_API_KEY=... python examples/arabic-rag-demo/bot.py
+target:
+  kind: http
+  url: http://127.0.0.1:8000/chat
+  body:
+    messages: "{{turns}}"
+  answer_path: answer
+  context_path: sources
+  usage_path: usage
+  health_url: http://127.0.0.1:8000/health
+  health_timeout_s: 30
+  timeout_s: 90
+
+judge:
+  provider: anthropic          # default model: claude-sonnet-5-5
+
+gate:
+  thresholds:
+    faithfulness: 0.85
+    answer_relevance: 0.7
+    dialect_match: 0.8
+    script_consistency: 0.95
+  max_failures: 0
+
+cases:
+  - examples/arabic-rag-demo/cases

@@ -1,0 +1,79 @@
+# Q&A on Nakhla Demo Bank (fictional) documents. No `context`: faithfulness is checked against the
+# documents the bot itself retrieved (`sources`).
+- id: demo-gulf-fees
+  turns:
+    - user: "ابي اعرف رسوم التحويل الدولي من التطبيق"
+  expected_dialect: gulf
+  reference: "رسوم التحويل الدولي من التطبيق 25 درهم للعملية، والفئة الذهبية معفاة."
+  tags: [fees, gulf]
+
+- id: demo-gulf-limit
+  turns:
+    - user: "كم الحد اليومي للتحويل؟ حسابي عادي"
+  expected_dialect: gulf
+  reference: "الحد اليومي للحساب العادي 50,000 درهم."
+  tags: [transfers, gulf]
+
+- id: demo-gulf-gold
+  turns:
+    - user: "شلون أصير من الفئة الذهبية؟"
+  expected_dialect: gulf
+  reference: "تصير ذهبي إذا متوسط رصيدك الشهري 100,000 درهم أو أكثر، أو إذا راتبك 25,000 درهم أو أكثر ومحوّل للبنك."
+  tags: [gold, gulf]
+
+- id: demo-egy-card-lost
+  turns:
+    - user: "الكارت بتاعي ضاع، أعمل إيه؟"
+  expected_dialect: egyptian
+  reference: "جمّد الكارت فورًا من التطبيق أو كلم خدمة العملاء، والبطاقة البديلة مجانية مرة في السنة وبتوصل في 3 أيام شغل."
+  tags: [cards, egyptian]
+
+- id: demo-egy-travel
+  turns:
+    - user: "لو سافرت بره، الكارت هيشتغل؟ وفيه رسوم؟"
+  expected_dialect: egyptian
+  reference: "أيوه بيشتغل من غير تفعيل، ورسوم المعاملات بالعملة الأجنبية 2%، والسحب من الصراف بره 15 درهم."
+  tags: [cards, egyptian]
+
+- id: demo-maghrebi-hours
+  turns:
+    - user: "الفرع يحل نهار السبت؟ وقتاش يسكّر؟"
+  expected_dialect: maghrebi
+  reference: "إيه، نهار السبت يحل من 9 الصباح حتى 1 متاع القايلة، ونهار الأحد مسكّر."
+  tags: [branches, maghrebi]
+
+- id: demo-maghrebi-account
+  turns:
+    - user: "نحب نحل كونط، شنوة نحتاج؟"
+  expected_dialect: maghrebi
+  reference: "تنجم تحل حساب من التطبيق في 10 دقايق بالهوية الإماراتية وإثبات العنوان، وما فماش حد أدنى للرصيد."
+  tags: [accounts, maghrebi]
+
+- id: demo-msa-murabaha
+  turns:
+    - user: "ما هي شروط تمويل المرابحة وما هامش الربح؟"
+  expected_dialect: msa
+  reference: "تمويل المرابحة متوافق مع الشريعة، يبدأ هامش الربح السنوي من 4.5% ومدته حتى 5 سنوات، ولا غرامات تأخير ربوية."
+  tags: [islamic-finance, msa]
+
+- id: demo-msa-zakat
+  turns:
+    - user: "هل حاسبة الزكاة في التطبيق تُعدّ فتوى؟"
+  expected_dialect: msa
+  reference: "لا، الحاسبة تقديرية للاسترشاد فقط ولا تُعد فتوى، ويُنصح بمراجعة جهة شرعية مختصة."
+  tags: [islamic-finance, msa]
+
+- id: demo-msa-unanswerable
+  turns:
+    - user: "ما سعر صرف الدولار اليوم لديكم؟"
+  expected_dialect: msa
+  reference: "هذه المعلومة غير متوفرة في الوثائق، ويُرجى التواصل مع خدمة العملاء."
+  tags: [unanswerable, msa]
+
+- id: demo-gulf-multiturn
+  turns:
+    - user: "عندي حساب ذهبي"
+    - user: "كم بيكلفني التحويل الدولي من التطبيق؟"
+  expected_dialect: gulf
+  reference: "ما عليك رسوم، الفئة الذهبية معفاة من رسوم التحويل الدولي عبر التطبيق."
+  tags: [fees, gulf, multi-turn]

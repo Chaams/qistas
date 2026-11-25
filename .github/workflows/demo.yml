@@ -1,0 +1,57 @@
+name: demo
+# Real evaluation of the example bot on every PR that touches it, on the Gemini API FREE tier:
+#   secret   GEMINI_API_KEY  (Google AI Studio key, no credit card)
+#   variable GEMINI_MODEL    (judge model id from Google AI Studio, free tier)
+#   variable DEMO_MODEL      (optional: bot model, to split the free quota)
+on:
+  pull_request:
+    paths:
+      - "examples/arabic-rag-demo/**"
+      - "qistas/**"
+      - "action.yml"
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  qistas:
+    runs-on: ubuntu-latest
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+      DEMO_PROVIDER: gemini
+      # The bot may use another model than the judge: free-tier quotas are counted per model.
+      DEMO_MODEL: ${{ vars.DEMO_MODEL || vars.GEMINI_MODEL }}
+    steps:
+      - name: Check configuration
+        run: |
+          [ -n "$GEMINI_API_KEY" ] || { echo "::error::missing secret GEMINI_API_KEY"; exit 1; }
+          [ -n "$GEMINI_MODEL" ] || { echo "::error::missing repository variable GEMINI_MODEL"; exit 1; }
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install google-genai
+      - name: Check that GEMINI_MODEL exists (lists the available models otherwise)
+        shell: python
+        run: |
+          import os, sys
+          from google import genai
+          client = genai.Client()
+          wanted = os.environ["GEMINI_MODEL"]
+          names = []
+          for m in client.models.list():
+              if "generateContent" in (m.supported_actions or []):
+                  names.append(m.name.removeprefix("models/"))
+          if wanted.removeprefix("models/") not in names:
+              print(f"::error::GEMINI_MODEL={wanted!r} is not available with this key.")
+              print("Models available for generateContent:")
+              print("\n".join(f"  {n}" for n in sorted(names)))
+              sys.exit(1)
+          print(f"model {wanted} OK")
+      - uses: ./
+        with:
+          config: examples/arabic-rag-demo/qistas.gemini.yaml
+          baseline: examples/arabic-rag-demo/baseline.json
+          start-command: python examples/arabic-rag-demo/bot.py
+          health-url: http://127.0.0.1:8000/health
+          concurrency: "1"

@@ -1,0 +1,61 @@
+<template>
+  <style>
+    @font-face { font-family: "Plex Arabic"; src: url("assets/fonts/IBMPlexSansArabic-SemiBold.ttf"); font-weight: 600; }
+    #root { position: absolute; inset: 0; background: #f3f4f7; font-family: Inter, sans-serif; color: #18203a; }
+    #s7-scale { position: absolute; left: 60px; top: 160px; width: 1100px; height: 770px; }
+    #s7-fix { position: absolute; left: 1180px; top: 250px; width: 680px; display: flex; flex-direction: column; gap: 18px; }
+    .s7-l { font-family: Inter, sans-serif; font-weight: 700; font-size: 32px; padding: 14px 22px; border-radius: 10px; background: #e5f4ec; color: #145c37; white-space: nowrap; }
+    #s7-pass { font-size: 120px; font-weight: 900; color: #1d7a4a; letter-spacing: -0.03em; margin-top: 30px; }
+    #s7-claim { position: absolute; left: 160px; top: 300px; width: 1600px; font-size: 92px; font-weight: 900; letter-spacing: -0.03em; line-height: 1.12; }
+    #s7-claim em { font-style: normal; color: #86590f; }
+    #s7-end { position: absolute; left: 160px; top: 720px; display: flex; align-items: baseline; gap: 34px; }
+    #s7-name { font-size: 72px; font-weight: 900; letter-spacing: -0.03em; }
+    #s7-ar { font-family: "Plex Arabic", sans-serif; font-weight: 600; font-size: 60px; color: #86590f; }
+    #s7-url { font-family: "IBM Plex Mono", monospace; font-size: 44px; color: #18203a; }
+    #s7-note { position: absolute; left: 160px; top: 870px; font-size: 28px; color: #5a6178; }
+  </style>
+  <div id="root" data-composition-id="s7" data-width="1920" data-height="1080">
+    <svg id="s7-scale" class="clip" data-start="0" data-duration="4.9" viewBox="0 0 800 560">
+      <path d="M300 540 h200 l-24 -24 h-152 z" fill="#18203a"/>
+      <rect x="392" y="150" width="16" height="370" fill="#18203a"/>
+      <g id="s7-beam"><rect x="100" y="142" width="600" height="16" rx="8" fill="#86590f"/></g>
+      <circle cx="400" cy="150" r="18" fill="#86590f"/>
+      <g id="s7-panL">
+        <line x1="130" y1="150" x2="60" y2="330" stroke="#5a6178" stroke-width="3"/><line x1="130" y1="150" x2="200" y2="330" stroke="#5a6178" stroke-width="3"/>
+        <rect x="78" y="250" width="104" height="80" rx="6" fill="#18203a"/>
+        <path d="M50 330 h160 a80 30 0 0 1 -160 0 z" fill="#86590f"/>
+        <text x="130" y="410" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="26" fill="#5a6178">baseline</text>
+      </g>
+      <g id="s7-panR">
+        <line x1="670" y1="150" x2="600" y2="330" stroke="#5a6178" stroke-width="3"/><line x1="670" y1="150" x2="740" y2="330" stroke="#5a6178" stroke-width="3"/>
+        <rect id="s7-w" x="618" y="250" width="104" height="80" rx="6" fill="#1d7a4a"/>
+        <path d="M590 330 h160 a80 30 0 0 1 -160 0 z" fill="#86590f"/>
+        <text x="670" y="410" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="26" fill="#5a6178">pull request #41</text>
+      </g>
+    </svg>
+    <div id="s7-fix" class="clip" data-start="0" data-duration="4.9">
+      <div id="s7-l1" class="s7-l">+ Réponds dans le dialecte du client.</div>
+      <div id="s7-l2" class="s7-l">+ Ne répète jamais de données personnelles.</div>
+      <div id="s7-pass">✅ PASS</div>
+    </div>
+    <div id="s7-claim" class="clip" data-start="4.9" data-duration="7.3">Votre chatbot arabe ne part en production que s'il <em>tient la balance</em>.</div>
+    <div id="s7-end" class="clip" data-start="4.9" data-duration="7.3"><span id="s7-name">Qistas</span><span id="s7-ar">القسطاس</span><span id="s7-url">github.com/Chaams/qistas</span></div>
+    <div id="s7-note" class="clip" data-start="4.9" data-duration="7.3">Open source · banque fictive, scénario illustratif · sons CC BY (voir CREDITS)</div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const th = 12, d = 270 * Math.sin(th * Math.PI / 180);
+    // starts tipped (end of the previous scene), comes back to level after the fix
+    tl.fromTo("#s7-beam", { rotation: -th, svgOrigin: "400 150" }, { rotation: 0, svgOrigin: "400 150", duration: 0.9, ease: "back.out(1.4)" }, 2.2);
+    tl.fromTo("#s7-panR", { y: -d }, { y: 0, duration: 0.9, ease: "back.out(1.4)" }, 2.2);
+    tl.fromTo("#s7-panL", { y: d }, { y: 0, duration: 0.9, ease: "back.out(1.4)" }, 2.2);
+    tl.fromTo(["#s7-l1", "#s7-l2"], { opacity: 0, x: 40 }, { opacity: 1, x: 0, duration: 0.4, ease: "power3.out", stagger: 0.3 }, 0.4);
+    tl.fromTo("#s7-w", { opacity: 0.3 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 1.8);
+    tl.fromTo("#s7-pass", { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.45, ease: "back.out(1.6)" }, 2.9);
+    tl.to(["#s7-scale", "#s7-fix"], { opacity: 0, duration: 0.35, ease: "power2.in" }, 4.5);
+    tl.fromTo("#s7-claim", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 5.0);
+    tl.fromTo("#s7-end", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 8.4);
+    tl.fromTo("#s7-note", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.out" }, 8.8);
+    window.__timelines["s7"] = tl;
+  </script>
+</template>

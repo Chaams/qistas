@@ -119,3 +119,47 @@ def test_provider_exception_becomes_judge_error():
 
     with pytest.raises(JudgeError, match="ConnectionError: 529 overloaded"):
         Boom([]).score("faithfulness", {})
+
+
+class _RateLimited(Exception):
+    def __init__(self, code):
+        super().__init__(f"{code} RESOURCE_EXHAUSTED")
+        self.code = code
+
+
+class _FlakyModels:
+    def __init__(self, failures, code=429):
+        self.failures, self.code, self.calls = failures, code, 0
+
+    def generate_content(self, **kw):
+        self.calls += 1
+        if self.calls <= self.failures:
+            raise _RateLimited(self.code)
+        return NS(text='{"score": 1, "reason": "ok"}', usage_metadata=None)
+
+
+def test_gemini_retries_rate_limit_then_succeeds():
+    from qistas.judge.gemini import GeminiJudge
+
+    models, sleeps = _FlakyModels(2), []
+    j = GeminiJudge("some-flash-model", client=NS(models=models), sleep=sleeps.append)
+    r = j.score("faithfulness", {})
+    assert r.score == 1.0 and models.calls == 3 and sleeps == [2, 4]
+    assert r.input_tokens == 0  # usage_metadata=None must not crash
+
+
+def test_gemini_gives_up_after_retries():
+    from qistas.judge.gemini import GeminiJudge
+
+    j = GeminiJudge("m", client=NS(models=_FlakyModels(99)), sleep=lambda s: None)
+    with pytest.raises(JudgeError, match="429"):
+        j.score("faithfulness", {})
+
+
+def test_gemini_does_not_retry_other_errors():
+    from qistas.judge.gemini import GeminiJudge
+
+    models = _FlakyModels(1, code=400)
+    with pytest.raises(JudgeError):
+        GeminiJudge("m", client=NS(models=models), sleep=lambda s: None).score("faithfulness", {})
+    assert models.calls == 1
