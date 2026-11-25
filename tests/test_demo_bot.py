@@ -80,3 +80,24 @@ def test_no_cost_for_unpriced_model(monkeypatch):
     bot = load()
     out = bot.answer([{"role": "user", "content": "سلام"}], generate=lambda s, m: ("x", {"input_tokens": 1, "output_tokens": 1}))
     assert "cost_usd" not in out["usage"]
+
+
+def test_gemini_bot_is_deterministic(monkeypatch):
+    """Temperature 0: a bot under test in CI must answer the same way run after run."""
+    import sys
+    import types
+
+    seen = {}
+
+    class FakeModels:
+        def generate_content(self, model, contents, config):
+            seen.update(config)
+            return types.SimpleNamespace(text="رد", usage_metadata=None)
+
+    fake = types.ModuleType("google.genai")
+    fake.Client = lambda: types.SimpleNamespace(models=FakeModels())
+    monkeypatch.setitem(sys.modules, "google.genai", fake)
+    monkeypatch.setitem(sys.modules, "google", types.SimpleNamespace(genai=fake))
+    monkeypatch.setenv("DEMO_MODEL", "m")
+    load().gemini_generate("sys", [{"role": "user", "content": "x"}])
+    assert seen["temperature"] == 0

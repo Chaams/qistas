@@ -103,7 +103,8 @@ def gemini_generate(system: str, messages: list[dict]) -> tuple[str, dict]:
         try:
             resp = client.models.generate_content(
                 model=MODEL, contents=to_gemini(messages),
-                config={"system_instruction": system, "max_output_tokens": 1000},
+                # temperature 0: a bot under test in CI must answer the same way from run to run
+                config={"system_instruction": system, "max_output_tokens": 1000, "temperature": 0},
             )
             break
         except Exception as e:
