@@ -1,0 +1,48 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "qistas"
+dynamic = ["version"]
+description = "Quality gate for Arabic LLM applications: dialect, faithfulness, hallucination, PII and prompt-injection checks in CI."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.11"
+authors = [{ name = "Mohamed Chamseddine Douici" }]
+keywords = ["llm", "evaluation", "arabic", "rag", "quality-gate", "ci", "red-teaming"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Natural Language :: Arabic",
+  "Topic :: Software Development :: Quality Assurance",
+  "Topic :: Software Development :: Testing",
+]
+dependencies = [
+  "typer>=0.12",
+  "pydantic>=2.6",
+  "httpx>=0.27",
+  "pyyaml>=6",
+  "jinja2>=3.1",
+]
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.40"]
+gemini = ["google-genai>=1.0"]
+openai = ["openai>=1.40"]
+all = ["qistas[anthropic,gemini,openai]"]
+dev = ["pytest>=8", "respx>=0.21"]
+
+[project.scripts]
+qistas = "qistas.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/Chaams/qistas"
+
+[tool.hatch.version]
+path = "qistas/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["qistas"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
