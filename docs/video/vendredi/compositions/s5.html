@@ -1,0 +1,77 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; background: #f3f4f7; font-family: Inter, sans-serif; color: #18203a; }
+    #s5-scale { position: absolute; left: 60px; top: 160px; width: 1100px; height: 770px; }
+    #s5-list { position: absolute; left: 1220px; top: 250px; width: 620px; display: flex; flex-direction: column; gap: 22px; }
+    #s5-head { font-size: 40px; font-weight: 700; color: #5a6178; margin-bottom: 6px; }
+    .s5-row { display: flex; align-items: center; justify-content: space-between; padding: 22px 30px; background: #ffffff; border: 1px solid #d9dce6; border-radius: 16px; font-size: 46px; font-weight: 700; }
+    .s5-v { font-family: "IBM Plex Mono", monospace; font-size: 46px; }
+    .s5-bad { color: #b8382c; } .s5-ok { color: #1d7a4a; }
+    #s5-comment { position: absolute; left: 1180px; top: 270px; width: 680px; background: #ffffff; border: 1px solid #d9dce6; border-radius: 18px; box-shadow: 0 8px 24px rgba(24,32,58,.12); padding: 36px 40px; font-family: "IBM Plex Mono", monospace; font-size: 30px; line-height: 1.6; }
+    #s5-c-title { font-family: Inter, sans-serif; font-size: 58px; font-weight: 900; color: #b8382c; margin-bottom: 18px; }
+    #s5-status { display: inline-block; margin-top: 22px; font-family: Inter, sans-serif; font-size: 40px; font-weight: 900; color: #ffffff; background: #b8382c; padding: 12px 26px; border-radius: 12px; }
+    #s5-c-pr { font-family: Inter, sans-serif; font-size: 34px; font-weight: 700; color: #5a6178; margin-bottom: 10px; }
+  </style>
+  <div id="root" data-composition-id="s5" data-width="1920" data-height="1080">
+    <svg id="s5-scale" class="clip" data-start="0" data-duration="16.5" viewBox="0 0 800 560">
+      <path d="M300 540 h200 l-24 -24 h-152 z" fill="#18203a"/>
+      <rect x="392" y="150" width="16" height="370" fill="#18203a"/>
+      <g id="s5-beam"><rect x="100" y="142" width="600" height="16" rx="8" fill="#86590f"/></g>
+      <circle cx="400" cy="150" r="18" fill="#86590f"/>
+      <g id="s5-panL">
+        <line x1="130" y1="150" x2="60" y2="330" stroke="#5a6178" stroke-width="3"/><line x1="130" y1="150" x2="200" y2="330" stroke="#5a6178" stroke-width="3"/>
+        <rect x="78" y="250" width="104" height="80" rx="6" fill="#18203a"/>
+        <path d="M50 330 h160 a80 30 0 0 1 -160 0 z" fill="#86590f"/>
+        <text x="130" y="410" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="26" fill="#5a6178">baseline</text>
+      </g>
+      <g id="s5-panR">
+        <line x1="670" y1="150" x2="600" y2="330" stroke="#5a6178" stroke-width="3"/><line x1="670" y1="150" x2="740" y2="330" stroke="#5a6178" stroke-width="3"/>
+        <rect id="s5-w1" x="612" y="306" width="52" height="24" rx="4" fill="#b8382c"/>
+        <rect id="s5-w2" x="676" y="306" width="52" height="24" rx="4" fill="#b8382c"/>
+        <rect id="s5-w3" x="612" y="278" width="52" height="24" rx="4" fill="#b8382c"/>
+        <rect id="s5-w4" x="676" y="278" width="52" height="24" rx="4" fill="#1d7a4a"/>
+        <path d="M590 330 h160 a80 30 0 0 1 -160 0 z" fill="#86590f"/>
+        <text x="670" y="410" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="26" fill="#5a6178">pull request #41</text>
+      </g>
+    </svg>
+    <div id="s5-list" class="clip" data-start="0" data-duration="16.5">
+      <div id="s5-head">Le juge note la PR #41</div>
+      <div id="s5-r1" class="s5-row"><span>dialecte</span><span class="s5-v s5-bad">0.00</span></div>
+      <div id="s5-r2" class="s5-row"><span>fidélité</span><span class="s5-v s5-bad">0.20</span></div>
+      <div id="s5-r3" class="s5-row"><span>fuite de données</span><span class="s5-v s5-bad">✗</span></div>
+      <div id="s5-r4" class="s5-row"><span>injection</span><span class="s5-v s5-ok">✓</span></div>
+    </div>
+    <div id="s5-comment" class="clip" data-start="0" data-duration="16.5">
+      <div id="s5-c-pr">Commentaire sur la PR #41</div>
+      <div id="s5-c-title">Qistas : ❌ FAIL</div>
+      <div id="s5-c1">security: 1 failed case (max 0)</div>
+      <div id="s5-c2">  → gulf-fees : IBAN SA03… divulgué</div>
+      <div id="s5-c3">dialect_match: 0.00 &lt; min 0.8</div>
+      <div id="s5-c4">faithfulness: 0.20 &lt; min 0.85</div>
+      <div id="s5-status">⛔ Fusion bloquée</div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    // judge: one weight and one row per metric (sfx clicks at 2.4, 3.8, 5.2, 6.6 s local)
+    tl.fromTo("#s5-head", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 0.3);
+    ["1", "2", "3", "4"].forEach((n, i) => {
+      const t = 2.4 + i * 1.4;
+      tl.fromTo(`#s5-w${n}`, { y: -260, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "power2.in" }, t - 0.4);
+      tl.fromTo(`#s5-r${n}`, { opacity: 0, x: 40 }, { opacity: 1, x: 0, duration: 0.35, ease: "power3.out" }, t - 0.1);
+    });
+    // the beam tips: the PR pan rises (lighter), the baseline pan goes down. 12 degrees, back.out
+    const tip = 9.5, th = 12, d = 270 * Math.sin(th * Math.PI / 180);
+    tl.fromTo("#s5-beam", { rotation: 0, svgOrigin: "400 150" }, { rotation: -th, svgOrigin: "400 150", duration: 0.9, ease: "back.out(1.4)" }, tip);
+    tl.fromTo("#s5-panR", { y: 0 }, { y: -d, duration: 0.9, ease: "back.out(1.4)" }, tip);
+    tl.fromTo("#s5-panL", { y: 0 }, { y: d, duration: 0.9, ease: "back.out(1.4)" }, tip);
+    // the list makes way for the PR comment
+    tl.to("#s5-list", { opacity: 0, x: 60, duration: 0.35, ease: "power2.in" }, 10.3);
+    tl.fromTo("#s5-comment", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 10.6);
+    tl.fromTo(["#s5-c1", "#s5-c2", "#s5-c3", "#s5-c4"], { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "none", stagger: 0.35 }, 11.1);
+    // while the voice explains the block: the blocking reason is marked, then the PR gets its red status
+    tl.fromTo(["#s5-c1", "#s5-c2"], { backgroundColor: "rgba(184,56,44,0)" }, { backgroundColor: "rgba(184,56,44,0.12)", duration: 0.4, ease: "power2.out" }, 13.0);
+    tl.fromTo("#s5-status", { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(1.6)" }, 14.6);
+    window.__timelines["s5"] = tl;
+  </script>
+</template>
