@@ -1,0 +1,14 @@
+# USD per 1M tokens. Source: Anthropic model table (cached 2026-11-03), checked 2026-11-25.
+# A model missing here gets cost = null (never estimated).
+# Haiku 5.5 price applies to prompts up to 100K tokens.
+[anthropic."claude-opus-5-5"]
+input = 4.00
+output = 20.00
+
+[anthropic."claude-sonnet-5-5"]
+input = 2.00
+output = 10.00
+
+[anthropic."claude-haiku-5-5"]
+input = 0.10
+output = 0.50
