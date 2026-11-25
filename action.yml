@@ -27,6 +27,9 @@ inputs:
   offline:
     description: "'true' = no LLM judge (rule-based and lexical checks only)."
     default: "false"
+  concurrency:
+    description: "Cases evaluated in parallel. Use 1 on free-tier API quotas."
+    default: "4"
   version:
     description: "Qistas version from PyPI. Empty = install from this action's own source."
     default: ""
@@ -134,8 +137,9 @@ runs:
         TARGET_URL: ${{ inputs.target-url }}
         START: ${{ inputs.start-command }}
         OFFLINE: ${{ inputs.offline }}
+        CONCURRENCY: ${{ inputs.concurrency }}
       run: |
-        args=(run -c "$CONFIG" -o results.json)
+        args=(run -c "$CONFIG" -o results.json --concurrency "$CONCURRENCY")
         [ -n "$TARGET_URL" ] && args+=(--target-url "$TARGET_URL")
         [ "$OFFLINE" = "true" ] && args+=(--offline)
         if [ -z "$TARGET_URL" ] && [ -z "$START" ]; then

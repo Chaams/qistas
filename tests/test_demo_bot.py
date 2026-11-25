@@ -56,3 +56,27 @@ def test_http_server_roundtrip():
         assert body["answer"] == "مرحبا" and "sources" in body
     finally:
         server.shutdown()
+
+
+def test_gemini_requires_model(monkeypatch):
+    import pytest
+
+    monkeypatch.setenv("DEMO_PROVIDER", "gemini")
+    monkeypatch.delenv("DEMO_MODEL", raising=False)
+    with pytest.raises(RuntimeError, match="DEMO_MODEL"):
+        load().pick_generator()
+
+
+def test_gemini_message_conversion():
+    bot = load()
+    contents = bot.to_gemini([{"role": "user", "content": "سلام"}, {"role": "assistant", "content": "أهلا"},
+                              {"role": "user", "content": "كم الرسوم؟"}])
+    assert [c["role"] for c in contents] == ["user", "model", "user"]
+    assert contents[2]["parts"] == [{"text": "كم الرسوم؟"}]
+
+
+def test_no_cost_for_unpriced_model(monkeypatch):
+    monkeypatch.setenv("DEMO_MODEL", "some-free-model")
+    bot = load()
+    out = bot.answer([{"role": "user", "content": "سلام"}], generate=lambda s, m: ("x", {"input_tokens": 1, "output_tokens": 1}))
+    assert "cost_usd" not in out["usage"]

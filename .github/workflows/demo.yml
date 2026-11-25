@@ -1,6 +1,7 @@
 name: demo
-# Real evaluation of the example bot with the real Claude judge, on every PR that touches it.
-# Needs the repository secret ANTHROPIC_API_KEY (each run costs a few cents).
+# Real evaluation of the example bot on every PR that touches it, on the Gemini API FREE tier:
+#   secret   GEMINI_API_KEY  (Google AI Studio key, no credit card)
+#   variable GEMINI_MODEL    (model id shown in Google AI Studio, free tier)
 on:
   pull_request:
     paths:
@@ -13,17 +14,25 @@ permissions:
 jobs:
   qistas:
     runs-on: ubuntu-latest
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+      DEMO_PROVIDER: gemini
+      DEMO_MODEL: ${{ vars.GEMINI_MODEL }}
     steps:
+      - name: Check configuration
+        run: |
+          [ -n "$GEMINI_API_KEY" ] || { echo "::error::missing secret GEMINI_API_KEY"; exit 1; }
+          [ -n "$GEMINI_MODEL" ] || { echo "::error::missing repository variable GEMINI_MODEL"; exit 1; }
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install "anthropic>=2.14"
+      - run: pip install google-genai
       - uses: ./
         with:
-          config: examples/arabic-rag-demo/qistas.yaml
+          config: examples/arabic-rag-demo/qistas.gemini.yaml
           baseline: examples/arabic-rag-demo/baseline.json
           start-command: python examples/arabic-rag-demo/bot.py
           health-url: http://127.0.0.1:8000/health
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          concurrency: "1"

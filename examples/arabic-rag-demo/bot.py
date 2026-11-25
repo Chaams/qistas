@@ -19,7 +19,8 @@ from pathlib import Path
 
 HERE = Path(__file__).parent
 CORPUS = json.loads((HERE / "corpus.json").read_text(encoding="utf-8"))
-MODEL = os.environ.get("DEMO_MODEL", "claude-opus-5-5")
+PROVIDER = os.environ.get("DEMO_PROVIDER", "anthropic")  # anthropic | gemini (Gemini API free tier)
+MODEL = os.environ.get("DEMO_MODEL") or ("claude-opus-5-5" if PROVIDER == "anthropic" else "")
 PRICES = {"claude-opus-5-5": (4.00, 20.00), "claude-sonnet-5-5": (2.00, 10.00), "claude-haiku-5-5": (0.10, 0.50)}
 
 _DIACRITICS = re.compile(r"[ؐ-ًؚ-ٰٟۖ-ۭـ]")
@@ -87,11 +88,47 @@ def _usage(u) -> dict:
     return {"input_tokens": u.input_tokens, "output_tokens": u.output_tokens}
 
 
-GENERATE = claude_generate
+def to_gemini(messages: list[dict]) -> list[dict]:
+    return [{"role": "model" if m["role"] == "assistant" else "user", "parts": [{"text": m["content"]}]}
+            for m in messages]
+
+
+def gemini_generate(system: str, messages: list[dict]) -> tuple[str, dict]:
+    import time
+
+    from google import genai
+
+    client = genai.Client()
+    for delay in [2, 4, 8, 16, 32, None]:  # free tier: wait for the per-minute quota on 429
+        try:
+            resp = client.models.generate_content(
+                model=MODEL, contents=to_gemini(messages),
+                config={"system_instruction": system, "max_output_tokens": 1000},
+            )
+            break
+        except Exception as e:
+            if getattr(e, "code", None) not in (429, 503) or delay is None:
+                raise
+            time.sleep(delay)
+    u = resp.usage_metadata
+    usage = {"input_tokens": (u.prompt_token_count or 0) if u else 0,
+             "output_tokens": (u.candidates_token_count or 0) if u else 0}
+    return (resp.text or "").strip(), usage
+
+
+def pick_generator():
+    if PROVIDER == "gemini":
+        if not MODEL:
+            raise RuntimeError("DEMO_MODEL is required with DEMO_PROVIDER=gemini (model id from Google AI Studio)")
+        return gemini_generate
+    return claude_generate
+
+
+GENERATE = None  # set by tests; otherwise chosen from DEMO_PROVIDER
 
 
 def answer(messages: list[dict], generate=None) -> dict:
-    generate = generate or GENERATE
+    generate = generate or GENERATE or pick_generator()
     last = next((m["content"] for m in reversed(messages) if m["role"] == "user"), "")
     docs = retrieve(" ".join(m["content"] for m in messages if m["role"] == "user")[-500:] or last)
     context = "\n".join(f'<doc title="{d["title"]}">{d["text"]}</doc>' for d in docs)
@@ -134,5 +171,6 @@ def make_server(port: int) -> ThreadingHTTPServer:
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "8000"))
-    print(f"Nakhla demo bot on http://127.0.0.1:{port} (model {MODEL})")
+    pick_generator()  # fail fast on a missing DEMO_MODEL
+    print(f"Nakhla demo bot on http://127.0.0.1:{port} ({PROVIDER} / {MODEL})")
     make_server(port).serve_forever()

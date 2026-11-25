@@ -17,8 +17,21 @@ qistas run -c examples/arabic-rag-demo/qistas.yaml
 qistas gate results.json -c examples/arabic-rag-demo/qistas.yaml --report-md report.md
 ```
 
+## Free: Gemini API
+
+With no Anthropic credit, everything runs on the **free tier of the Gemini API**: a Google AI Studio key, no credit card, with rate limits. Qistas then runs one case at a time and waits automatically when the quota is reached.
+
+```bash
+export GEMINI_API_KEY=... GEMINI_MODEL=<model id from AI Studio>
+export DEMO_PROVIDER=gemini DEMO_MODEL=$GEMINI_MODEL
+python examples/arabic-rag-demo/bot.py &
+qistas run -c examples/arabic-rag-demo/qistas.gemini.yaml --concurrency 1
+```
+
+Google may use free-tier requests to improve its products. That is why this demo uses only fictional data.
+
 ## In CI
 
-The `.github/workflows/demo.yml` workflow runs the real evaluation on every PR that touches this folder or Qistas itself, and posts the report as a comment. It needs the repository secret `ANTHROPIC_API_KEY`.
+The `.github/workflows/demo.yml` workflow runs the real evaluation on every PR that touches this folder or Qistas itself, and posts the report as a comment. It runs on the free tier of the Gemini API: secret `GEMINI_API_KEY` and repository variable `GEMINI_MODEL`.
 
 The demo PR deliberately degrades `system_prompt.txt` and shows how Qistas blocks the change. Its results appear here once it has run; no number is written in advance.

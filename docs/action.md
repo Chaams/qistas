@@ -34,6 +34,7 @@ If you provide neither, Qistas calls the fixed `target.url` from `qistas.yaml`. 
 | `health-url` | — | Polled until the bot responds |
 | `baseline` | `baseline.json` | Reference to compare against |
 | `judge-provider` | *(empty)* | Extra to install; empty = `judge.provider` from the config |
+| `concurrency` | `4` | Cases evaluated in parallel (`1` on a free-tier quota) |
 | `offline` | `false` | No LLM judge (rules and lexical checks only) |
 | `version` | *(empty)* | Qistas version from PyPI; empty = the action's own source |
 | `comment` | `true` | Posts or updates the comment marked `<!-- qistas-report -->` |

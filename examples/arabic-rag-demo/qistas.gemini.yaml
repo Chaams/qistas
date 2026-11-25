@@ -1,0 +1,31 @@
+# Same demo, 100% on the Gemini API free tier (Google AI Studio key, no credit card).
+# GEMINI_MODEL = a model id from Google AI Studio (e.g. a "Flash" model available on the free tier).
+#   export GEMINI_API_KEY=... GEMINI_MODEL=... DEMO_PROVIDER=gemini DEMO_MODEL=$GEMINI_MODEL
+#   python examples/arabic-rag-demo/bot.py &
+#   qistas run -c examples/arabic-rag-demo/qistas.gemini.yaml --concurrency 1
+target:
+  kind: http
+  url: http://127.0.0.1:8000/chat
+  body:
+    messages: "{{turns}}"
+  answer_path: answer
+  context_path: sources
+  usage_path: usage
+  health_url: http://127.0.0.1:8000/health
+  health_timeout_s: 30
+  timeout_s: 180               # free-tier retries can take up to ~1 minute
+
+judge:
+  provider: gemini
+  model: "${GEMINI_MODEL}"
+
+gate:
+  thresholds:
+    faithfulness: 0.85
+    answer_relevance: 0.7
+    dialect_match: 0.8
+    script_consistency: 0.95
+  max_failures: 0
+
+cases:
+  - examples/arabic-rag-demo/cases
