@@ -68,7 +68,12 @@ class BaseJudge:
         tin = tout = 0
         last: JudgeError | None = None
         for _ in range(2):  # one retry on malformed output
-            text, i, o = self._complete(prompts.SYSTEM, prompt)
+            try:
+                text, i, o = self._complete(prompts.SYSTEM, prompt)
+            except JudgeError:
+                raise
+            except Exception as e:  # provider/network/SDK failure: report on the case, never crash the run
+                raise JudgeError(f"{type(e).__name__}: {e}") from e
             tin, tout = tin + i, tout + o
             try:
                 score, reason = parse(text)

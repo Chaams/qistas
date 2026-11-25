@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -124,3 +125,17 @@ def test_cli_prints_arabic_under_cp1252(tmp_path):
                        cwd=tmp_path, env=env, capture_output=True)
     assert p.returncode == 0, p.stderr.decode("utf-8", "replace")
     assert b"UnicodeEncodeError" not in p.stderr
+
+
+def test_python_target_imports_from_cwd(tmp_path):
+    (tmp_path / "mybot.py").write_text("def answer(q):\n    return {'answer': 'رد ' + q}\n", encoding="utf-8")
+    (tmp_path / "qistas.yaml").write_text("target: {kind: python, callable: 'mybot:answer'}\ncases: [cases]\n", encoding="utf-8")
+    (tmp_path / "cases").mkdir()
+    (tmp_path / "cases" / "c.yaml").write_text(CASES.split("- id: a1")[0], encoding="utf-8")
+    env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
+    exe = shutil.which("qistas", path=str(Path(sys.executable).parent))  # the console script, not `python -m`
+    assert exe, "qistas console script not installed"
+    p = subprocess.run([exe, "run", "--offline"], cwd=tmp_path, env=env, capture_output=True)
+    assert p.returncode == 0, p.stderr.decode("utf-8", "replace")
+    data = json.loads((tmp_path / "results.json").read_text(encoding="utf-8"))
+    assert data["errors"] == 0, data["cases"][0]["error"]

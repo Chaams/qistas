@@ -36,7 +36,10 @@ def _score_case(case: Case, target, judge) -> tuple[CaseResult, dict]:
         if fn is None:
             metrics.append(MetricResult(name, None, error=f"Unknown metric: {name}"))
             continue
-        metrics.append(fn(case, reply, judge))
+        try:
+            metrics.append(fn(case, reply, judge))
+        except Exception as e:  # safety net: one broken metric must not abort the whole run
+            metrics.append(MetricResult(name, None, error=f"{type(e).__name__}: {e}"))
     return CaseResult(case.id, case.type, case.tags, metrics, reply.latency_ms, None, transcript, reply.answer), reply.usage
 
 

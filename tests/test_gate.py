@@ -78,3 +78,9 @@ def test_errors_block():
 def test_baseline_shape():
     b = baseline_from(result({"faithfulness": 0.9}, cost=0.5))
     assert set(b) == {"schema", "meta", "aggregates", "tag_aggregates", "latency_p95_ms", "judge_cost_usd"}
+
+
+def test_judge_cost_growth_is_not_a_regression():
+    base = baseline_from(result(cost=1.0))
+    out = evaluate(result(cost=1.5), base, GateConfig())
+    assert out.passed

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import importlib
 import inspect
+import os
+import sys
 import time
 
 from ..cases import Turn
@@ -20,6 +22,9 @@ class PythonBot:
 
     def _func(self):
         mod, name = self.cfg.callable.split(":")
+        cwd = os.getcwd()
+        if cwd not in sys.path:  # console scripts do not put the user's project on sys.path
+            sys.path.insert(0, cwd)
         return getattr(importlib.import_module(mod), name)
 
     def ask(self, turns: list[Turn]) -> BotReply:

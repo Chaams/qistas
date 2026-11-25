@@ -22,8 +22,8 @@ inputs:
     description: Path to baseline.json
     default: baseline.json
   judge-provider:
-    description: Install extra for the judge (anthropic | gemini | openai). Defaults to the config's provider.
-    default: anthropic
+    description: "Judge provider extra to install (anthropic | gemini | openai | recorded). Empty = read judge.provider from the config."
+    default: ""
   offline:
     description: "'true' = no LLM judge (rule-based and lexical checks only)."
     default: "false"
@@ -45,48 +45,63 @@ outputs:
 runs:
   using: composite
   steps:
+    # Qistas gets its own interpreter and venv: the job's Python (and the bot's dependencies) stay untouched.
+    - uses: actions/setup-python@v5
+      id: py
+      with:
+        python-version: "3.12"
+        update-environment: false
+
+    - name: Install Qistas
+      id: install
+      shell: bash
+      env:
+        PYTHON: ${{ steps.py.outputs.python-path }}
+        VERSION: ${{ inputs.version }}
+        ACTION_PATH: ${{ github.action_path }}
+        CONFIG: ${{ inputs.config }}
+        PROVIDER_INPUT: ${{ inputs.judge-provider }}
+        OFFLINE: ${{ inputs.offline }}
+      run: |
+        venv="$RUNNER_TEMP/qistas-venv"
+        "$PYTHON" -m venv "$venv"
+        bin="$venv/bin"; [ -d "$venv/Scripts" ] && bin="$venv/Scripts"
+        if [ -z "$VERSION" ]; then pkg="$ACTION_PATH"; else pkg="qistas==$VERSION"; fi
+        "$bin/python" -m pip install --quiet "$pkg"
+        provider="$PROVIDER_INPUT"
+        if [ -z "$provider" ]; then
+          provider=$("$bin/python" -c 'import sys, yaml; c = yaml.safe_load(open(sys.argv[1], encoding="utf-8")) or {}; print((c.get("judge") or {}).get("provider", "anthropic"))' "$CONFIG" 2>/dev/null || echo anthropic)
+        fi
+        [ "$OFFLINE" = "true" ] && provider=offline
+        case "$provider" in
+          anthropic|gemini|openai)
+            if [ -z "$VERSION" ]; then extra_pkg="$ACTION_PATH[$provider]"; else extra_pkg="qistas[$provider]==$VERSION"; fi
+            "$bin/python" -m pip install --quiet "$extra_pkg" ;;
+        esac
+        echo "QISTAS_BIN=$bin/qistas" >> "$GITHUB_ENV"
+        echo "QISTAS_PY=$bin/python" >> "$GITHUB_ENV"
+        echo "provider=$provider" >> "$GITHUB_OUTPUT"
+        "$bin/qistas" --version
+
     - name: Check secrets (fork PRs)
       id: skip
       shell: bash
       env:
         IS_FORK: ${{ github.event.pull_request.head.repo.fork }}
-        OFFLINE: ${{ inputs.offline }}
-        PROVIDER: ${{ inputs.judge-provider }}
+        PROVIDER: ${{ steps.install.outputs.provider }}
       run: |
-        key=""
+        key="none-needed"
         case "$PROVIDER" in
           anthropic) key="${ANTHROPIC_API_KEY:-}" ;;
           gemini) key="${GEMINI_API_KEY:-}" ;;
           openai) key="${OPENAI_API_KEY:-}" ;;
         esac
-        if [ "$IS_FORK" = "true" ] && [ "$OFFLINE" != "true" ] && [ -z "$key" ]; then
-          echo "Qistas skipped: secrets unavailable on fork PRs"
+        if [ "$IS_FORK" = "true" ] && [ -z "$key" ]; then
+          echo "::notice::Qistas skipped: secrets unavailable on fork PRs"
           echo "skip=true" >> "$GITHUB_OUTPUT"
         else
           echo "skip=false" >> "$GITHUB_OUTPUT"
         fi
-
-    - uses: actions/setup-python@v5
-      if: steps.skip.outputs.skip != 'true'
-      with:
-        python-version: "3.12"
-
-    - name: Install Qistas
-      if: steps.skip.outputs.skip != 'true'
-      shell: bash
-      env:
-        VERSION: ${{ inputs.version }}
-        PROVIDER: ${{ inputs.judge-provider }}
-        OFFLINE: ${{ inputs.offline }}
-        ACTION_PATH: ${{ github.action_path }}
-      run: |
-        extra="[$PROVIDER]"; [ "$OFFLINE" = "true" ] && extra=""
-        if [ -z "$VERSION" ]; then
-          python -m pip install --quiet "${ACTION_PATH}${extra}"
-        else
-          python -m pip install --quiet "qistas${extra}==${VERSION}"
-        fi
-        qistas --version
 
     - name: Start the bot
       if: steps.skip.outputs.skip != 'true' && inputs.start-command != ''
@@ -124,13 +139,13 @@ runs:
         [ -n "$TARGET_URL" ] && args+=(--target-url "$TARGET_URL")
         [ "$OFFLINE" = "true" ] && args+=(--offline)
         if [ -z "$TARGET_URL" ] && [ -z "$START" ]; then
-          kind=$(python -c "from qistas.config import load_config; print(load_config('$CONFIG').target.kind)" 2>/dev/null || echo "")
+          kind=$("$QISTAS_PY" -c 'import sys, yaml; c = yaml.safe_load(open(sys.argv[1], encoding="utf-8")) or {}; print((c.get("target") or {}).get("kind", ""))' "$CONFIG" 2>/dev/null || echo "")
           if [ "$kind" = "http" ]; then
             echo "QISTAS_NOTE=shared staging URL : PR code may not be what is tested" >> "$GITHUB_ENV"
             echo "::warning::Qistas is calling a fixed URL: the code of this PR may not be what is tested."
           fi
         fi
-        qistas "${args[@]}"
+        "$QISTAS_BIN" "${args[@]}"
 
     - name: Gate
       id: gate
@@ -141,7 +156,7 @@ runs:
         BASELINE: ${{ inputs.baseline }}
       run: |
         set +e
-        qistas gate results.json -c "$CONFIG" --baseline "$BASELINE" --report-md qistas-report.md --report-html report.html
+        "$QISTAS_BIN" gate results.json -c "$CONFIG" --baseline "$BASELINE" --report-md qistas-report.md --report-html report.html
         echo "code=$?" >> "$GITHUB_OUTPUT"
         cat qistas-report.md >> "$GITHUB_STEP_SUMMARY"
 

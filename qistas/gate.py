@@ -8,6 +8,8 @@ from .results import RunResult
 
 HIGHER_IS_BETTER = {"faithfulness", "answer_relevance", "dialect_match", "script_consistency"}
 LOWER_IS_BETTER = {"hallucination_rate", "latency_p95_ms", "judge_cost_usd"}
+# Cost depends on answer length and suite size: thresholds may cap it, but it is never a regression.
+NOT_REGRESSION_CHECKED = {"judge_cost_usd"}
 
 
 @dataclass
@@ -29,7 +31,7 @@ def _check_threshold(name: str, value: float | None, limit: float, scope: str = 
 def _regressions(cand: dict, base: dict, cfg: GateConfig, notes: list[str]) -> list[str]:
     """Port of Chaams/llmops-eval-pipeline `regressions()`, extended to absent metrics."""
     problems = []
-    for name in sorted(HIGHER_IS_BETTER | LOWER_IS_BETTER):
+    for name in sorted((HIGHER_IS_BETTER | LOWER_IS_BETTER) - NOT_REGRESSION_CHECKED):
         c, b = cand.get(name), base.get(name)
         if c is None or b is None:
             if (c is None) != (b is None):

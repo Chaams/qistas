@@ -33,12 +33,14 @@ If you provide neither, Qistas calls the fixed `target.url` from `qistas.yaml`. 
 | `start-command` | — | Starts the bot in the job |
 | `health-url` | — | Polled until the bot responds |
 | `baseline` | `baseline.json` | Reference to compare against |
-| `judge-provider` | `anthropic` | Installs the matching extra |
+| `judge-provider` | *(empty)* | Extra to install; empty = `judge.provider` from the config |
 | `offline` | `false` | No LLM judge (rules and lexical checks only) |
 | `version` | *(empty)* | Qistas version from PyPI; empty = the action's own source |
 | `comment` | `true` | Posts or updates the comment marked `<!-- qistas-report -->` |
 
 Output: `passed` (`true`, `false` or `skipped`).
+
+Qistas runs in its own Python environment (`$RUNNER_TEMP/qistas-venv`) and does not change the job's `python`. The bot started by `start-command` therefore uses your own Python and dependencies. A `kind: python` target, by contrast, is imported into the Qistas environment: in CI, prefer an HTTP target.
 
 ## Pull requests from forks
 

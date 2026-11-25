@@ -114,3 +114,16 @@ def test_judge_cost_sums_judged_metrics_only():
     res = run(CFG, [c], ScriptedBot({"a": "x"}), judge=PricedJudge())
     # faithfulness + answer_relevance + dialect_match are judged; script_consistency is not
     assert res.judge_cost_usd == pytest.approx(0.006)
+
+
+def test_unexpected_metric_exception_does_not_crash_run():
+    class Crash:
+        provider, model = "x", "x"
+
+        def score(self, task, payload):
+            raise RuntimeError("provider SDK bug")
+
+    res = run(CFG, [case("q1", "a", reference="x"), case("q2", "b", reference="x")],
+              ScriptedBot({"a": "x", "b": "x"}), judge=Crash())
+    assert res.errors == 2
+    assert any("provider SDK bug" in (m.error or "") for m in res.cases[0].metrics)

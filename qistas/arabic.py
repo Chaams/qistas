@@ -13,7 +13,9 @@ _DIACRITICS = re.compile(r"[ؐ-ًؚ-ٰٟۖ-ۭ]")
 _TATWEEL = "ـ"
 _ALEF_VARIANTS = str.maketrans({"أ": "ا", "إ": "ا", "آ": "ا", "ٱ": "ا", "ى": "ي", "ة": "ه"})
 _TOKEN = re.compile(r"[^\W_]+", re.UNICODE)
-_PRESENTATION_FORMS = re.compile(r"[ﭐ-﷿ﹰ-﻿]")
+# Presentation forms usually mean broken shaping. Excluded: ornate parentheses ﴾﴿ (U+FD3E-FD3F) and
+# word ligatures such as ﷺ ﷲ (U+FDF0-FDFF), which are written on purpose.
+_PRESENTATION_FORMS = re.compile(r"[ﭐ-ﴽ﵀-﷯ﹰ-﻾]")
 
 
 def normalize(text: str) -> str:

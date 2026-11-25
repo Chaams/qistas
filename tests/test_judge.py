@@ -110,3 +110,12 @@ def test_recording_then_replay(tmp_path):
         replay.score("faithfulness", {"answer": "other"})
     files = list(tmp_path.glob("*.json"))
     assert len(files) == 1 and "أ" in files[0].read_text(encoding="utf-8")
+
+
+def test_provider_exception_becomes_judge_error():
+    class Boom(FakeJudge):
+        def _complete(self, system, prompt):
+            raise ConnectionError("529 overloaded")
+
+    with pytest.raises(JudgeError, match="ConnectionError: 529 overloaded"):
+        Boom([]).score("faithfulness", {})

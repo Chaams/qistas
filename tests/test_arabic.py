@@ -30,3 +30,8 @@ def test_broken_text():
     assert has_broken_text("مرحبا �")
     assert has_broken_text("ﻻ")  # presentation-form ligature
     assert not has_broken_text("مرحبا بك")
+
+
+def test_religious_ligatures_are_not_broken():
+    assert not has_broken_text("محمد ﷺ")
+    assert not has_broken_text("﴿بسم الله﴾ ﷲ")
