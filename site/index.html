@@ -54,7 +54,7 @@ nav .links { display: flex; gap: 20px; margin-inline-start: auto; font-size: 0.9
 nav .links a { text-decoration: none; color: var(--muted); }
 nav .links a:hover { color: var(--ink); }
 .lang { display: flex; border: 1px solid var(--line); border-radius: 99px; overflow: hidden; }
-.lang button { border: 0; background: transparent; color: var(--muted); font: 500 0.78rem var(--f-mono); padding: 5px 10px; cursor: pointer; }
+.lang button { border: 0; background: transparent; color: var(--muted); font: 500 0.78rem var(--f-mono); padding: 7px 12px; cursor: pointer; }
 .lang button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 
 .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: 500 0.95rem var(--f-body); text-decoration: none; cursor: pointer; }
@@ -82,7 +82,7 @@ nav .links a:hover { color: var(--ink); }
 .row { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; font: 0.86rem var(--f-mono); padding: 8px 10px; border-radius: 8px; background: var(--paper); }
 .row .ok { color: var(--pass); } .row .ko { color: var(--fail); font-weight: 500; }
 .row small { color: var(--muted); }
-.evidence { border-inline-start: 3px solid var(--fail); padding: 8px 12px; font-size: 0.88rem; display: grid; gap: 4px; background: color-mix(in srgb, var(--fail) 7%, var(--panel)); border-radius: 0 8px 8px 0; }
+.evidence { border: 1px solid color-mix(in srgb, var(--fail) 45%, var(--line)); padding: 10px 14px; font-size: 0.88rem; display: grid; gap: 4px; background: color-mix(in srgb, var(--fail) 7%, var(--panel)); border-radius: 8px; }
 .evidence .ar { font-size: 0.98rem; }
 .report .note { font: 0.78rem var(--f-mono); color: var(--muted); padding: 0 16px 14px; }
 
@@ -90,7 +90,7 @@ nav .links a:hover { color: var(--ink); }
 .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 22px; display: grid; gap: 10px; align-content: start; min-width: 0; }
 .card .tag { font: 500 0.76rem var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--fail); }
-.card .q { font-size: 1rem; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; }
+.card .q { font-size: 1rem; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
 .card p { font-size: 0.94rem; color: var(--muted); }
 
 /* VIDEO */
@@ -171,7 +171,6 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
 <header class="hero" id="top">
   <div class="wrap grid">
     <div>
-      <p class="eyebrow"><span lang="en">Quality gate for Arabic AI assistants</span><span lang="fr">Contrôle qualité des assistants IA en arabe</span></p>
       <h1 lang="en">Your Arabic chatbot, <em>tested before every release.</em></h1>
       <h1 lang="fr">Votre chatbot arabe, <em>testé avant chaque mise en production.</em></h1>
       <p class="tagline-ar ar" lang="ar">اختبر مساعدك الذكي قبل أن يختبره عملاؤك</p>
@@ -208,7 +207,6 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
 <section id="problem">
   <div class="wrap">
     <div class="head">
-      <p class="eyebrow"><span lang="en">The problem</span><span lang="fr">Le problème</span></p>
       <h2 lang="en">Arabic bots fail in ways generic eval tools can't see</h2>
       <h2 lang="fr">Un bot arabe échoue de façons que les outils génériques ne voient pas</h2>
       <p lang="en">Promptfoo, DeepEval and Braintrust are built around English. Your customers write in dialect, mix scripts and share regional identifiers. Every one of these failures reaches production silently.</p>
@@ -249,7 +247,6 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
       <source src="assets/qistas-vendredi.mp4" type="video/mp4">
     </video>
     <div class="head" style="margin:0">
-      <p class="eyebrow"><span lang="en">60-second story</span><span lang="fr">L'histoire en 60 secondes</span></p>
       <h2 lang="en">Friday, 17:58. A prompt change is about to ship.</h2>
       <h2 lang="fr">Vendredi, 17 h 58. Un changement de prompt va partir en production.</h2>
       <p lang="en">See how Qistas catches the regression before the weekend. Voice-over in French.</p>
@@ -261,7 +258,6 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
 <section id="how">
   <div class="wrap">
     <div class="head">
-      <p class="eyebrow"><span lang="en">How it works</span><span lang="fr">Fonctionnement</span></p>
       <h2 lang="en">Four steps on every pull request</h2>
       <h2 lang="fr">Quatre étapes à chaque pull request</h2>
     </div>
@@ -293,7 +289,6 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
 <section id="who">
   <div class="wrap">
     <div class="head">
-      <p class="eyebrow"><span lang="en">Who it's for</span><span lang="fr">Pour qui</span></p>
       <h2 lang="en">Teams shipping Arabic assistants where a wrong answer costs money</h2>
       <h2 lang="fr">Les équipes qui déploient un assistant arabe, là où une mauvaise réponse coûte cher</h2>
     </div>
@@ -314,7 +309,6 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
 <section id="pricing">
   <div class="wrap">
     <div class="head">
-      <p class="eyebrow"><span lang="en">Offers</span><span lang="fr">Offres</span></p>
       <h2 lang="en">Start free. Get an expert audit when it matters.</h2>
       <h2 lang="fr">Commencez gratuitement. Faites auditer quand l'enjeu est réel.</h2>
     </div>
@@ -346,7 +340,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
 
 <section id="faq">
   <div class="wrap">
-    <div class="head"><p class="eyebrow">FAQ</p></div>
+    <div class="head"><h2>FAQ</h2></div>
     <div class="faq">
       <details><summary lang="en">Does our data leave our infrastructure?</summary><summary lang="fr">Nos données quittent-elles notre infrastructure ?</summary>
         <p lang="en">No data goes to Qistas. It runs in your CI or on your machine and calls only your bot and the LLM provider you choose, with your own key. An offline mode uses rules only.</p>
