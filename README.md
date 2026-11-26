@@ -1,5 +1,7 @@
 # Qistas · القسطاس
 
+> 🌐 **Website: https://chaams.github.io/qistas** · interactive demo: https://chaams.github.io/qistas/explainer/
+
 **A quality gate for Arabic LLM applications.** Qistas runs your chatbot or RAG assistant against Arabic test cases in CI and **blocks the pull request** when quality drops: wrong dialect, answers not grounded in your documents, hallucinations, personal-data leaks, successful prompt injections.
 
 > Status: `0.1.0.dev0`, pre-release. Not yet published on PyPI or the GitHub Marketplace.
